@@ -20,11 +20,8 @@
     return results
   }
 
-  async function get_hints(words) {
-    const link = document.getElementsByClassName("pz-toolbar-button__hints")[0]
-    const text = await fetch(link.href, { cache: "force-cache" }).then(function(res) { return res.text() })
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, "text/html");
+  function get_word_starts(doc, words) {
+    // gets hints for word_starts
     const elements = doc.querySelectorAll(".interactive-content .content:last-child span")
     const word_starts = []
 
@@ -45,22 +42,87 @@
       }
     }
 
+    return word_starts_map
+  }
+
+  function get_matrix(doc, words) {
+    // gets hints for table
     const table = doc.querySelectorAll(".interactive-content .table")[0]
     const matrix = {}
 
     for (var i = 0, row; row = table.rows[i]; i++) {
-      const row_key = row.innerHTML.trim()
-
-      matrix[row_key] = ""
+      const row_key = row.cells[0].innerText.trim().replace(":", "")
+      matrix[row_key] = []
+      total_words_got = 0
       //iterate through rows
-      //rows would be accessed using the "row" variable assigned in the for loop
       for (var j = 0, col; col = row.cells[j]; j++) {
-        //iterate through columns
-        //columns would be accessed using the "col" variable assigned in the for loop
+        total = col.innerText.trim()
+
+        if (row_key == "" || j == 0 || total == "-") {
+          matrix[row_key].push(total)
+        } else if (j == row.cells.length - 1) {
+          // last column is totals
+          matrix[row_key].push(render_fraction(total_words_got, total))
+        } else {
+          //iterate through columns
+          words_got = 0
+          for (const word of words) {
+            if (word.charAt(0) == row_key && word.length == matrix[""][j]) {
+              words_got += 1
+              total_words_got += 1
+            }
+          }
+
+          matrix[row_key].push(render_fraction(words_got, total))
+        }
       }
     }
 
-    return [word_starts_map]
+    return matrix
+  }
+
+  async function get_hints(words) {
+    const link = document.getElementsByClassName("pz-toolbar-button__hints")[0]
+    const text = await fetch(link.href, { cache: "force-cache" }).then(function(res) { return res.text() })
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, "text/html");
+
+    const word_starts = get_word_starts(doc, words)
+    const matrix = get_matrix(doc, words)
+
+    return [word_starts, matrix]
+  }
+
+  function display_word_starts(word_starts) {
+    ul = document.createElement("ul")
+    ul.className = "sb-wordlist-items-pag"
+
+    for (start in word_starts) {
+      const line = document.createElement("li");
+      line.className = "sb-anagram"
+      const values = word_starts[start]
+      const fraction = render_fraction(values.current, values.total)
+      line.innerHTML = `${start}: ${fraction}`
+      ul.appendChild(line)
+    }
+    return ul
+  }
+
+  function display_matrix(matrix) {
+    tbl = document.createElement('table');
+    tbl.style.width = '100px';
+
+    for (const [row_key, cols] of Object.entries(matrix)) {
+      const tr = tbl.insertRow();
+      for (col of cols) {
+        const td = tr.insertCell();
+        td.innerHTML = col
+        td.style.minWidth = "60px"
+        td.style.height = "30px"
+      }
+    }
+
+    return tbl
   }
 
   async function display_modal() {
@@ -77,23 +139,11 @@
     const results = get_current_words()
     const [word_starts, matrix] = await get_hints(results)
 
-    ul = document.createElement("ul")
-    ul.className = "sb-wordlist-items-pag"
+    const ul = display_word_starts(word_starts)
+    const tbl = display_matrix(matrix)
+
     modal.appendChild(ul)
-
-    for (start in word_starts) {
-      const line = document.createElement("li");
-      line.className = "sb-anagram"
-      const values = word_starts[start]
-      let html = `${start}: ${values.current}/${values.total}`
-
-      if (values.current == values.total) {
-        console.log("Equal!", start)
-        html = `<s>${html}</s>`;
-      }
-      line.innerHTML = html
-      ul.appendChild(line)
-    }
+    modal.appendChild(tbl)
   }
 
   function display_button() {
@@ -139,53 +189,15 @@
     heading.parentNode.insertBefore(container, heading.nextSibling)
   }
 
+  function render_fraction(numerator, denominator) {
+    // renders it with strike through if it's whole.
+    if (numerator == denominator) {
+      return `<s>${numerator}/${denominator}</s>`
+    }
+
+    return `${numerator}/${denominator}`
+  }
+
   display_container()
   display_button()
 })()
-
-
-  (function() {
-    function render_fraction(numerator, denominator) {
-      // renders it with strike through if it's whole.
-      if (numerator == denominator) {
-        return `<s>${numerator}/${denominator}</s>`
-      }
-
-      return `${numerator}/${denominator}`
-    }
-
-
-    const words = ["Color", "Corn", "Irony"]
-    const table = document.querySelectorAll(".interactive-content .table")[0]
-    const matrix = {}
-
-    for (var i = 0, row; row = table.rows[i]; i++) {
-      const row_key = row.cells[0].innerText.trim().replace(":", "")
-      matrix[row_key] = []
-      total_words_got = 0
-      //iterate through rows
-      for (var j = 0, col; col = row.cells[j]; j++) {
-        total = col.innerText.trim()
-
-        if (row_key == "" || j == 0 || total == "-") {
-          matrix[row_key].push(total)
-        } else if (j == row.cells.length - 1) {
-          // last column is totals
-          matrix[row_key].push(render_fraction(total_words_got, total))
-        } else {
-          //iterate through columns
-          words_got = 0
-          for (const word of words) {
-            if (word.charAt(0) == row_key && word.length == matrix[""][j]) {
-              words_got += 1
-              total_words_got += 1
-            }
-          }
-
-          matrix[row_key].push(render_fraction(words_got, total))
-        }
-      }
-    }
-
-    console.log(matrix)
-  })()
