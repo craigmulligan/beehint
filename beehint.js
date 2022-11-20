@@ -34,7 +34,6 @@
   }
 
   function get_word_starts(doc, words) {
-    // gets hints for word_starts
     const elements = doc.querySelectorAll(
       ".interactive-content .content:last-child span"
     );
@@ -69,7 +68,6 @@
   }
 
   function get_matrix(doc, words) {
-    // gets hints for table
     const table = doc.querySelectorAll(".interactive-content .table")[0];
     const matrix = {};
 
@@ -77,17 +75,14 @@
       const row_key = row.cells[0].innerText.trim().replace(":", "");
       matrix[row_key] = [];
       total_words_got = 0;
-      //iterate through rows
       for (var j = 0, col; (col = row.cells[j]); j++) {
         total = col.innerText.trim();
 
         if (row_key == "" || j == 0 || total == "-") {
           matrix[row_key].push(total);
         } else if (j == row.cells.length - 1) {
-          // last column is totals
           matrix[row_key].push(render_fraction(total_words_got, total));
         } else {
-          //iterate through columns
           words_got = 0;
           for (const word of words) {
             if (word.charAt(0) == row_key && word.length == matrix[""][j]) {
@@ -105,7 +100,6 @@
   }
 
   async function get_hints(words) {
-    // loads hints page
     const link = document.getElementsByClassName("pz-toolbar-button__hints")[0];
     const text = await fetch(link.href, { cache: "force-cache" }).then(
       function(res) {
@@ -146,7 +140,6 @@
         }
         ul.appendChild(line);
 
-        // start again
         current_line = `${start}-${fraction} `;
       } else {
         if (current_line) {
@@ -219,7 +212,6 @@
   document.addEventListener("click", function(e) {
     if (e.target && e.target.id == "beehint-button") {
       const button = e.target;
-      //do something
       if (button.value == "off") {
         display_modal();
         button.value = "on";
@@ -246,7 +238,6 @@
   }
 
   function render_fraction(numerator, denominator) {
-    // renders it with strike through if it's whole.
     if (numerator == denominator) {
       return `<s>${numerator}/${denominator}</s>`;
     }
