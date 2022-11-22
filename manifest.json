@@ -14,7 +14,7 @@
         "beehint.js"
       ],
       "matches": [
-        "*://*.nytimes.com/puzzles/spelling-bee",
+        "*://*.nytimes.com/puzzles/spelling-bee"
       ]
     }
   ],
