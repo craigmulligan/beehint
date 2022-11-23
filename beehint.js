@@ -1,5 +1,7 @@
 (function() {
   const CONTAINER_ID = "beehint-container";
+  const MODAL_ID = "beehint-modal";
+  const BUTTON_ID = "beehint-button";
 
   function remove_element(element) {
     const exists = document.getElementById(element.id);
@@ -39,7 +41,7 @@
     );
     const word_starts = [];
 
-    for (var elem of elements) {
+    for (const elem of elements) {
       word_starts.push(
         elem.textContent
           .trim()
@@ -71,11 +73,11 @@
     const table = doc.querySelectorAll(".interactive-content .table")[0];
     const matrix = {};
 
-    for (var i = 0, row; (row = table.rows[i]); i++) {
+    for (let i = 0, row; (row = table.rows[i]); i++) {
       const row_key = row.cells[0].innerText.trim().replace(":", "");
       matrix[row_key] = [];
-      total_words_got = 0;
-      for (var j = 0, col; (col = row.cells[j]); j++) {
+      let total_words_got = 0;
+      for (let j = 0, col; (col = row.cells[j]); j++) {
         total = col.innerText.trim();
 
         if (row_key == "" || j == 0 || total == "-") {
@@ -83,7 +85,7 @@
         } else if (j == row.cells.length - 1) {
           matrix[row_key].push(render_fraction(total_words_got, total));
         } else {
-          words_got = 0;
+          let words_got = 0;
           for (const word of words) {
             if (word.charAt(0) == row_key && word.length == matrix[""][j]) {
               words_got += 1;
@@ -118,7 +120,7 @@
   function display_word_starts(word_starts) {
     const ul = document.createElement("ul");
     ul.className = "";
-    current_line = null;
+    let current_line = null;
     const styles = {
       margin: "10px 0px",
       fontWeight: "100",
@@ -154,12 +156,12 @@
   }
 
   function display_matrix(matrix) {
-    tbl = document.createElement("table");
+    const tbl = document.createElement("table");
     tbl.style.width = "100px";
 
     for (const [row_key, cols] of Object.entries(matrix)) {
       const tr = tbl.insertRow();
-      for ([i, col] of cols.entries()) {
+      for (const [i, col] of cols.entries()) {
         const td = tr.insertCell();
         td.innerHTML = col;
         td.style.minWidth = "40px";
@@ -175,14 +177,13 @@
   }
 
   async function display_modal() {
-    console.log("loading modal...");
     const modal = document.createElement("div");
     modal.height = 100;
-    modal.id = "beehint-modal";
+    modal.id = MODAL_ID;
 
     remove_element(modal);
 
-    const container = document.getElementById("beehint-container");
+    const container = document.getElementById(CONTAINER_ID);
     container.appendChild(modal);
 
     const results = get_current_words();
@@ -195,7 +196,7 @@
   function display_button() {
     const btn = document.createElement("button");
     btn.innerHTML = "Show hints";
-    btn.id = "beehint-button";
+    btn.id = BUTTON_ID;
     btn.value = "off";
     btn.style.background = "none";
     btn.style.padding = "0";
@@ -205,19 +206,19 @@
 
     remove_element(btn);
 
-    const container = document.getElementById("beehint-container");
+    const container = document.getElementById(CONTAINER_ID);
     container.appendChild(btn);
   }
 
   document.addEventListener("click", function(e) {
-    if (e.target && e.target.id == "beehint-button") {
+    if (e.target && e.target.id == BUTTON_ID) {
       const button = e.target;
       if (button.value == "off") {
         display_modal();
         button.value = "on";
         button.innerHTML = "Hide Hints";
       } else {
-        const modal = document.getElementById("beehint-modal");
+        const modal = document.getElementById(MODAL_ID);
         remove_element(modal);
         button.value = "off";
         button.innerHTML = "Show Hints";
@@ -227,8 +228,7 @@
 
   function display_container() {
     const container = document.createElement("div");
-    container.className = "beehint-container";
-    container.id = "beehint-container";
+    container.id = CONTAINER_ID;
     container.style = "margin-left:25px;";
 
     remove_element(container);
