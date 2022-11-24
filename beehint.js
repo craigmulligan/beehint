@@ -72,18 +72,23 @@
   function get_matrix(doc, words) {
     const table = doc.querySelectorAll(".interactive-content .table")[0];
     const matrix = {};
+    const totals = []
 
     for (let i = 0, row; (row = table.rows[i]); i++) {
       const row_key = row.cells[0].innerText.trim().replace(":", "");
       matrix[row_key] = [];
       let total_words_got = 0;
       for (let j = 0, col; (col = row.cells[j]); j++) {
-        total = col.innerText.trim();
+        const total = col.innerText.trim();
+
 
         if (row_key == "" || j == 0 || total == "-") {
           matrix[row_key].push(total);
         } else if (j == row.cells.length - 1) {
           matrix[row_key].push(render_fraction(total_words_got, total));
+        } else if (row_key == "Σ") {
+          // last row tally totals. 
+          matrix[row_key].push(render_fraction(totals[j], total));
         } else {
           let words_got = 0;
           for (const word of words) {
@@ -94,6 +99,12 @@
           }
 
           matrix[row_key].push(render_fraction(words_got, total));
+
+          if (totals[j]) {
+            totals[j] += words_got
+          } else {
+            totals[j] = words_got
+          }
         }
       }
     }
