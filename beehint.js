@@ -145,10 +145,14 @@
       const fraction = render_fraction(values.current, values.total);
       if (current_line && start.charAt(0) != current_line.charAt(0) || index == Object.keys(word_starts).length - 1) {
         const line = document.createElement("li");
-        line.innerHTML = current_line;
         for (s in styles) {
           line.style[s] = styles[s];
         }
+        if (index == Object.keys(word_starts).length - 1) {
+          current_line += `${start}-${fraction} `;
+        }
+
+        line.innerHTML = current_line;
         ul.appendChild(line);
 
         current_line = `${start}-${fraction} `;
