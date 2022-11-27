@@ -141,11 +141,9 @@
       lineHeight: "30px",
     };
 
-    for (start in word_starts) {
-      const values = word_starts[start];
+    for (const [index, [start, values]] of Object.entries(Object.entries(word_starts))) {
       const fraction = render_fraction(values.current, values.total);
-
-      if (current_line && start.charAt(0) != current_line.charAt(0)) {
+      if (current_line && start.charAt(0) != current_line.charAt(0) || index == Object.keys(word_starts).length - 1) {
         const line = document.createElement("li");
         line.innerHTML = current_line;
         for (s in styles) {
